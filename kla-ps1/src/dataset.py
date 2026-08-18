@@ -76,10 +76,15 @@ class PairedDataset(Dataset):
         deg = torch.from_numpy(_load_gray(dpath)).unsqueeze(0)
         gt = torch.from_numpy(_load_gray(gpath)).unsqueeze(0)
 
-        # random aligned crop: patch on degraded, patch*scale on GT
+        # aligned crop: patch on degraded, patch*scale on GT.
+        # Random position when augmenting (normal training); fixed center
+        # crop when not (e.g. --sanity), so the target is truly static.
         _, h, w = deg.shape
         p = min(self.patch, h, w)
-        top, left = random.randint(0, h - p), random.randint(0, w - p)
+        if self.augment:
+            top, left = random.randint(0, h - p), random.randint(0, w - p)
+        else:
+            top, left = (h - p) // 2, (w - p) // 2
         deg = deg[:, top:top + p, left:left + p]
         gt = gt[:, top * self.scale:(top + p) * self.scale,
                 left * self.scale:(left + p) * self.scale]
