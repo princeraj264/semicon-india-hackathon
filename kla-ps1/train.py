@@ -74,7 +74,8 @@ def main():
         gt_dir = os.path.join(args.kla, "GT")
         if not (os.path.isdir(deg_dir) and os.path.isdir(gt_dir)):
             p.error(f"--kla root must contain GT/ and NoisyLR/ (got {args.kla})")
-        ds = PairedDataset(deg_dir, gt_dir, patch_size=args.patch, scale=args.scale)
+        ds = PairedDataset(deg_dir, gt_dir, patch_size=args.patch, scale=args.scale,
+                           augment=not args.sanity)
         if args.synth_mix > 0 and not args.sanity:
             n_synth = int(len(ds) * args.synth_mix)
             synth = SyntheticDataset(gt_dir, patch_size=args.patch,
@@ -86,7 +87,8 @@ def main():
                   f"({args.synth_mix:.0%}) for OOD robustness")
     elif args.paired:
         ds = PairedDataset(args.paired[0], args.paired[1],
-                           patch_size=args.patch, scale=args.scale)
+                           patch_size=args.patch, scale=args.scale,
+                           augment=not args.sanity)
     elif args.data:
         ds = SyntheticDataset(args.data, patch_size=args.patch,
                               scale=args.scale, repeat=4)
