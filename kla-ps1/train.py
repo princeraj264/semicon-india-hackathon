@@ -3,15 +3,18 @@
 KLA PS1 -- reproducible training script.
 
 Usage:
-    # mandatory sanity check first (overfit 2 images; PSNR should exceed ~40 dB):
-    python train.py --data data/train_clean --sanity
+    # mandatory sanity check first (overfit 2 pairs; PSNR should exceed ~40 dB):
+    python train.py --kla data/train --sanity
 
-    # synthetic randomized-degradation training on clean images:
-    python train.py --data data/train_clean --epochs 200 --scale 2
+    # PRIMARY: train on the official KLA pairs (data/train/{GT,NoisyLR}),
+    # with synthetic re-degradations of GT mixed in for OOD robustness:
+    python train.py --kla data/train --epochs 200 --synth-mix 0.25
 
-    # fine-tune on official KLA pairs:
-    python train.py --paired data/degraded data/ground_truth \
-        --resume models/model.pt --epochs 50 --lr 1e-5
+    # pure synthetic randomized-degradation training on any clean images:
+    python train.py --data data/train/GT --epochs 200 --scale 2
+
+    # explicit paired folders:
+    python train.py --paired data/train/NoisyLR data/train/GT
 
 Saves best checkpoint (val PSNR) to models/model.pt -- the file run.py loads.
 """
@@ -41,9 +44,14 @@ def set_seed(seed: int):
 
 def main():
     p = argparse.ArgumentParser(description="Train UBRN for KLA PS1")
+    p.add_argument("--kla", help="official dataset root containing GT/ and "
+                                 "NoisyLR/ subfolders (e.g. data/train)")
     p.add_argument("--data", help="folder of CLEAN images (synthetic degradation mode)")
     p.add_argument("--paired", nargs=2, metavar=("DEGRADED_DIR", "GT_DIR"),
                    help="official paired data folders")
+    p.add_argument("--synth-mix", type=float, default=0.0,
+                   help="with --kla: fraction of extra synthetic samples "
+                        "re-degraded from GT for OOD robustness (e.g. 0.25)")
     p.add_argument("--scale", type=int, default=2, choices=[1, 2, 4])
     p.add_argument("--dim", type=int, default=32, help="base channel width")
     p.add_argument("--patch", type=int, default=64, help="low-res patch size")
@@ -61,14 +69,29 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # ---------------- data ----------------
-    if args.paired:
+    if args.kla:
+        deg_dir = os.path.join(args.kla, "NoisyLR")
+        gt_dir = os.path.join(args.kla, "GT")
+        if not (os.path.isdir(deg_dir) and os.path.isdir(gt_dir)):
+            p.error(f"--kla root must contain GT/ and NoisyLR/ (got {args.kla})")
+        ds = PairedDataset(deg_dir, gt_dir, patch_size=args.patch, scale=args.scale)
+        if args.synth_mix > 0 and not args.sanity:
+            n_synth = int(len(ds) * args.synth_mix)
+            synth = SyntheticDataset(gt_dir, patch_size=args.patch,
+                                     scale=args.scale, repeat=1)
+            synth = Subset(synth, random.sample(range(len(synth)),
+                                                min(n_synth, len(synth))))
+            ds = torch.utils.data.ConcatDataset([ds, synth])
+            print(f"Mixed in {len(synth)} synthetic re-degraded samples "
+                  f"({args.synth_mix:.0%}) for OOD robustness")
+    elif args.paired:
         ds = PairedDataset(args.paired[0], args.paired[1],
                            patch_size=args.patch, scale=args.scale)
     elif args.data:
         ds = SyntheticDataset(args.data, patch_size=args.patch,
                               scale=args.scale, repeat=4)
     else:
-        p.error("provide --data (clean images) or --paired DEGRADED_DIR GT_DIR")
+        p.error("provide --kla ROOT, --data CLEAN_DIR, or --paired DEG_DIR GT_DIR")
 
     if args.sanity:
         ds = Subset(ds, list(range(min(2, len(ds)))))

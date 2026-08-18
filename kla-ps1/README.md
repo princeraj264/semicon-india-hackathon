@@ -11,6 +11,28 @@ Full architecture rationale: `docs/KLA_PS1_Architecture.pdf`.
 
 ---
 
+## Official dataset
+
+[Google Drive folder](https://drive.google.com/drive/folders/1VKiFW-kDk9-q5XRPu3nrl08OM94EwzV6)
+
+| Split | Contents | Shape | Range |
+|---|---|---|---|
+| `train.zip` (876 MB) | 3,200 pairs: `train/GT/*.npy` + `train/NoisyLR/*.npy` (matching filenames) | GT `256×256`, NoisyLR `128×128` | GT `[0, 1]`; NoisyLR **unclipped** (observed `[-0.09, 1.88]`) |
+| `Test_NoisyLR.zip` (22 MB) | 400 degraded images: `NoisyLR/*.npy` | `128×128` | **unclipped** (observed `[-0.22, 2.16]`) |
+
+Scale factor is **fixed ×2** (128 → 256). Do **not** clip inputs — the
+out-of-range values from speckle are signal (see architecture PDF, F2).
+
+```bash
+pip install gdown
+gdown 1SNPXs_E9GHQuHiiElXOsmnzOxT4PFubx -O train.zip        # train (876 MB)
+gdown 1Ayd88_vLwVh-0of3BzL3v94DF7tTutK9 -O Test_NoisyLR.zip # test (22 MB)
+unzip -q train.zip -d data/ && unzip -q Test_NoisyLR.zip -d data/
+# -> data/train/{GT,NoisyLR}/  and  data/NoisyLR/ (test)
+```
+
+---
+
 ## Quick start — inference (what reviewers run)
 
 ```bash
@@ -31,15 +53,15 @@ python run.py <input_dir> <output_dir> --scale 4  # x4 variant
 ## Training (reproducible from scratch)
 
 ```bash
-# 1. MANDATORY sanity check — overfit 2 images (expect PSNR > 40 dB):
-python train.py --data data/train_clean --sanity
+# 1. MANDATORY sanity check — overfit 2 official pairs (expect PSNR > 40 dB):
+python train.py --kla data/train --sanity --epochs 300
 
-# 2. Randomized-degradation pretraining on any clean grayscale images:
-python train.py --data data/train_clean --epochs 200 --scale 2
+# 2. PRIMARY: train on the 3,200 official pairs, mixing in 25% synthetic
+#    re-degradations of GT for OOD robustness (test set is part-OOD):
+python train.py --kla data/train --epochs 200 --synth-mix 0.25
 
-# 3. Fine-tune on the official KLA pairs:
-python train.py --paired data/degraded data/ground_truth \
-    --resume models/model.pt --epochs 50 --lr 1e-5
+# 3. (optional) pure synthetic pretraining on any clean grayscale images:
+python train.py --data data/train/GT --epochs 100 --scale 2
 ```
 
 Best checkpoint (val PSNR) is saved to `models/model.pt` — the exact file
