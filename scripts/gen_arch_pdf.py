@@ -118,7 +118,7 @@ def on_page(canv, doc):
     canv.drawString(18 * mm, H - 11.5 * mm, "SEMICON INDIA HACKATHON 2026  |  TRACK 1 (KLA)  |  PS-01: AI-BASED RESTORATION OF DEGRADED IMAGES")
     canv.setFont("Helvetica", 7.5)
     canv.setFillColor(GRAY)
-    canv.drawRightString(W - 18 * mm, H - 11.5 * mm, "Solution Architecture v2 (rectified)")
+    canv.drawRightString(W - 18 * mm, H - 11.5 * mm, "Team DataDrifters  |  Solution Architecture v2 (rectified)")
     canv.line(18 * mm, 13 * mm, W - 18 * mm, 13 * mm)
     canv.setFont("Helvetica", 7.5)
     canv.drawCentredString(W / 2, 9 * mm, f"Page {doc.page}")

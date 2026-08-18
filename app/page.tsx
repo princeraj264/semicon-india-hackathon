@@ -38,7 +38,7 @@ export default function Page() {
       <div className="mx-auto max-w-3xl px-6 py-12 flex flex-col gap-10">
         <header className="flex flex-col gap-2 border-b border-border pb-6">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            SEMICON India Hackathon 2026 &mdash; Track 1 (KLA) &mdash; PS 1
+            Team DataDrifters &mdash; SEMICON India Hackathon 2026 &mdash; Track 1 (KLA) &mdash; PS 1
           </p>
           <h1 className="text-2xl font-bold text-balance">
             Unified Blind Restoration Network
@@ -115,7 +115,7 @@ export default function Page() {
             View full architecture PDF
           </a>
           <p className="text-xs text-muted-foreground">
-            Deadline: Round 1 submission &mdash; 16 Aug 2026 &middot; File name: TeamName_KLA_PS01.pdf
+            Deadline: Round 1 submission &mdash; 16 Aug 2026 &middot; File name: DataDrifters_KLA_PS01.pdf
           </p>
         </footer>
       </div>

@@ -1,6 +1,8 @@
 # KLA PS1 — AI-Based Restoration of Degraded Images
 
-**SEMICON India Hackathon 2026 · Track 1 (KLA) · Problem Statement 1**
+**Team DataDrifters · SEMICON India Hackathon 2026 · Track 1 (KLA) · Problem Statement 1**
+
+Submission deck: `DataDrifters_KLA_PS01.pdf` (i4C portal naming convention).
 
 A single **Unified Blind Restoration Network (UBRN)** that jointly reverses
 speckle noise, Gaussian noise, and downsampling applied in **random order**,
