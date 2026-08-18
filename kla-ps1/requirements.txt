@@ -1,0 +1,7 @@
+# Inference (run.py) -- minimal
+torch>=2.1.0
+numpy>=1.24.0
+
+# Training only
+Pillow>=10.0.0
+lpips==0.1.4  # optional perceptual loss; bundle weights locally for offline use
