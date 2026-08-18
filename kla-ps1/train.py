@@ -101,11 +101,15 @@ def main():
               "PSNR > 40 dB. If it plateaus low, the loader/normalization/loss "
               "has a bug.")
 
-    n_val = max(1, len(ds) // 20) if not args.sanity else 1
-    n_train = len(ds) - n_val
-    train_ds, val_ds = torch.utils.data.random_split(
-        ds, [n_train, n_val], generator=torch.Generator().manual_seed(args.seed)
-    )
+    if args.sanity:
+        # true overfit test: train AND validate on the same 2 images
+        train_ds, val_ds = ds, ds
+    else:
+        n_val = max(1, len(ds) // 20)
+        n_train = len(ds) - n_val
+        train_ds, val_ds = torch.utils.data.random_split(
+            ds, [n_train, n_val], generator=torch.Generator().manual_seed(args.seed)
+        )
     batch_size = min(args.batch, max(1, len(train_ds)))
     train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
                           num_workers=4, pin_memory=True,
